@@ -1,0 +1,101 @@
+---
+title: "蔡英文的Facebook粉絲團分析"
+output: github_document
+---
+#2016/01/01至04/11貼文分析
+
+#讀取蔡英文粉絲團資料
+
+```{r }
+if (!require('Rfacebook')){
+    install.packages("Rfacebook")
+    library(Rfacebook)
+}
+token<-'CAACEdEose0cBAAipJI4hnDlZCZBwqveMDZB7ZAdCoK9PPiqgoJZBciRCZBohbWmx8WEDaylKk3HZAiLnjXwl3l8ZAGFYpnOm6tjCiIZCSSTJZAISjtDRY8OsDw4BjqxK7RfWt1s3veTBajjuX8izMb6rE0ZCElDla3lOfyvJETZA2t09rUhGUDRvYTkudAPPuOIb6MPfiG1YSWUwhxzXULuq6QOrGePlXWvw7ZCEZD'
+totalPage<-NULL
+lastDate<-Sys.Date()
+DateVectorStr<-as.character(seq(as.Date("2016-01-01"),lastDate,by="5 days"))
+for(i in 1:(length(DateVectorStr)-1)){
+    tempPage<-getPage("tsaiingwen", token,
+                      since = DateVectorStr[i],until = DateVectorStr[i+1])
+    totalPage<-rbind(totalPage,tempPage)
+}
+nrow(totalPage)
+
+totalPage$datetime <- as.POSIXct(totalPage$created_time, 
+                                 format = "%Y-%m-%dT%H:%M:%S+0000", 
+                                 tz = "GMT")
+totalPage$dateTPE <- format(totalPage$datetime, "%Y-%m-%d", 
+                            tz = "Asia/Taipei")
+totalPage$weekdays <-weekdays(as.Date(totalPage$dateTPE))
+
+```
+2016/01/01~2016/04/11蔡英文粉絲團總共發了212篇文章
+#每日發文數分析
+
+```{r echo=TRUE}
+
+output<-aggregate(message~weekdays+dateTPE,totalPage,length)
+library(knitr)
+kable(output, digits=2)
+```
+
+2016/01/01~2016/04/11 
+
+
+只有01/17這天沒有發文，其他每天都有發文。
+
+01/17之後發文數就變少了可能是因為選舉結束了。
+
+
+#每日likes數
+
+```{r echo=TRUE}
+output1<-aggregate(likes_count~dateTPE,totalPage,mean)
+library(knitr)
+kable(output1, digits=2)
+```
+
+
+01/16、01/17 總統當選帶動兩天讚數來到20多萬。
+
+02/08 台南大地震祈福感謝文。讚數10萬。
+
+02/11 台南大地震祈福文。讚數11萬。
+
+03/29 小燈泡的祈福文，讚數18萬。
+
+
+#每日comments數
+
+```{r echo=TRUE}
+output2<-aggregate(comments_count~dateTPE,totalPage,mean)
+library(knitr)
+kable(output2, digits=2)
+```
+
+01/04 留言首度破千，黨派形象文，或許帶動正反雙方留言。
+
+01/17 留言1萬多則，大多祝賀當選，但也有其他支持者的聲音。
+
+01/20 留言近3萬則，文章多為簡體字，或許是那時中國大陸的防火牆失靈所造成。
+
+03/19 出席車子的活動，與嚴凱泰互動很少，留言數也是01/01~04/11最低的。
+
+
+
+#每日shares數
+
+```{r echo=TRUE}
+output3<-aggregate(shares_count~dateTPE,totalPage,mean)
+library(knitr)
+kable(output3, digits=2)
+```
+
+
+01/16 分享數4千多，可能是當選了很開心。
+
+01/20~01/22 感謝當選的照片文章影響分享數。
+
+04/05 分享數創最低，只有1可能大家不懂他想表達的意思。
+
